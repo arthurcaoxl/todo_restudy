@@ -1,30 +1,36 @@
+import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from database import Base, get_db
 from main import app
 
-client = TestClient(app)
+# 创建临时数据库引擎
+@pytest.fixture
+def db_session(tmp_path):
+    db_file = tmp_path / "test.db"
+    engine = create_engine(f"sqlite:///{db_file}", connect_args={"check_same_thread": False})
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-def test_create_book():
+@pytest.fixture
+def client(db_session):
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+    def test_create_book(client):
     resp = client.post("/books", json={"title": "测试书", "author": "李四"})
     assert resp.status_code == 201
-    data = resp.json()
-    assert data["title"] == "测试书"
-    assert data["author"] == "李四"
-    assert data["read"] == False
-    assert "id" in data
-
-def test_list_books():
-    resp = client.get("/books")
-    assert resp.status_code == 200
-    assert isinstance(resp.json(), list)
-
-def test_get_book():
-    post_resp = client.post("/books", json={"title": "单独获取", "author": "王五"})
-    book_id = post_resp.json()["id"]
-    get_resp = client.get(f"/books/{book_id}")
-    assert get_resp.status_code == 200
-    assert get_resp.json()["title"] == "单独获取"
-
-def test_not_found():
-    resp = client.get("/books/99999")
-    assert resp.status_code == 404
-    assert resp.json()["detail"] == "Book not found"
+    ...

@@ -1,33 +1,43 @@
-from fastapi import FastAPI, HTTPException
-from models import Book
-from schemas import BookCreate, BookResponse
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+import crud, models, schemas
+from database import engine, get_db
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-books_db = []
-counter = 1
+@app.post("/books", response_model=schemas.BookResponse, status_code=201)
+def create_book(book: schemas.BookCreate, db: Session = Depends(get_db)):
+    db_book = crud.create_book(db, book)
+    return db_book
 
-@app.post("/books", response_model=BookResponse, status_code=201)
-def create_book(book: BookCreate):
-    global counter
-    new_book = Book(title=book.title, author=book.author)
-    new_book.id = counter
-    books_db.append(new_book)
-    counter += 1
-    return BookResponse(
-        id=new_book.id,
-        title=new_book.title,
-        author=new_book.author,
-        read=new_book.read
-    )
+@app.get("/books", response_model=list[schemas.BookResponse])
+def list_books(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    books = crud.get_books(db, skip=skip, limit=limit)
+    return books
 
-@app.get("/books", response_model=list[BookResponse])
-def list_books():
-    return [BookResponse(id=b.id, title=b.title, author=b.author, read=b.read) for b in books_db]
+@app.get("/books/{book_id}", response_model=schemas.BookResponse)
+def get_book(book_id: int, db: Session = Depends(get_db)):
+    db_book = crud.get_book(db, book_id)
+    if not db_book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return db_book
 
-@app.get("/books/{book_id}", response_model=BookResponse)
-def get_book(book_id: int):
-    for b in books_db:
-        if b.id == book_id:
-            return BookResponse(id=b.id, title=b.title, author=b.author, read=b.read)
-    raise HTTPException(status_code=404, detail="Book not found")
+@app.put("/books/{book_id}", response_model=schemas.BookResponse)
+def update_book(book_id: int, book_update: schemas.BookUpdate, db: Session = Depends(get_db)):
+    db_book = crud.update_book(db, book_id, book_update)
+    if not db_book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return db_book
+
+@app.delete("/books/{book_id}", status_code=204)
+def delete_book(book_id: int, db: Session = Depends(get_db)):
+    if not crud.delete_book(db, book_id):
+        raise HTTPException(status_code=404, detail="Book not found")
+    return
+
+@app.get("/books/{book_id}/similar", response_model=list[schemas.BookResponse])
+def get_similar_books(book_id: int, max_depth: int = 1, db: Session = Depends(get_db)):
+    similar_books = crud.recommend_by_bfs(db, book_id, max_depth)
+    return similar_books
