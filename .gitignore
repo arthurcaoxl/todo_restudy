@@ -1,2 +1,25 @@
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.so
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Virtual environment
 .venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+api_client.html
+main_list.py   # 如果你确定不需要提交这个文件
