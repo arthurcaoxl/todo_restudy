@@ -25,8 +25,6 @@ def update_book(db: Session, book_id: int, book_update: BookUpdate):
         db_book.title = book_update.title
     if book_update.author is not None:
         db_book.author = book_update.author
-    if book_update.read is not None:
-        db_book.read = book_update.read
     db.commit()
     db.refresh(db_book)
     return db_book
@@ -41,7 +39,7 @@ def delete_book(db: Session, book_id: int):
 
 
 def get_books_by_author(db: Session):
-    """返回作者名 -> 该书作者的所有书籍列表"""
+    """返回作者名 -> 该作者的所有书籍列表"""
     books = db.query(Book).all()
     author_map = {}
     for book in books:
@@ -56,7 +54,7 @@ def recommend_by_bfs(db: Session, book_id: int, max_depth: int = 1):
         return []
     
     author_books = get_books_by_author(db)
-    all_books = db.query(Book).all()   # 改正点：models.Book → Book
+    all_books = db.query(Book).all()
     books_by_id = {b.id: b for b in all_books}
     
     queue = deque()
