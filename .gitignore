@@ -25,3 +25,4 @@ api_client.html
 main_list.py   # 如果你确定不需要提交这个文件
 __pycache__/
 *.pyc
+.env
