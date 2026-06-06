@@ -57,7 +57,3 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Book not found")
     return
 
-@app.get("/books/{book_id}/similar", response_model=list[schemas.BookResponse])
-def get_similar_books(book_id: int, max_depth: int = 1, db: Session = Depends(get_db)):
-    similar_books = crud.recommend_by_bfs(db, book_id, max_depth)
-    return similar_books
