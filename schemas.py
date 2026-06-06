@@ -1,17 +1,16 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field, ConfigDict
 
 class BookCreate(BaseModel):
-    title: str
-    author: str
+    title: str = Field(..., min_length=1, max_length=200)
+    author: str = Field(..., min_length=1, max_length=100)
 
 class BookUpdate(BaseModel):
-    title: Optional[str] = None
-    author: Optional[str] = None
-    read: Optional[bool] = None
+    title: str | None = Field(None, min_length=1, max_length=200)
+    author: str | None = Field(None, min_length=1, max_length=100)
 
 class BookResponse(BaseModel):
     id: int
     title: str
     author: str
-    read: bool
+
+    model_config = ConfigDict(from_attributes=True)

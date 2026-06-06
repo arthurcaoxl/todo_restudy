@@ -24,6 +24,15 @@ def get_book(book_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Book not found")
     return db_book
 
+@app.get("/books/{book_id}/similar", response_model=list[schemas.BookResponse])
+def get_similar_books(book_id: int, max_depth: int = 1, db: Session = Depends(get_db)):
+    # 先检查书是否存在
+    book = crud.get_book(db, book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    similar_books = crud.recommend_by_bfs(db, book_id, max_depth)
+    return similar_books
+
 @app.put("/books/{book_id}", response_model=schemas.BookResponse)
 def update_book(book_id: int, book_update: schemas.BookUpdate, db: Session = Depends(get_db)):
     db_book = crud.update_book(db, book_id, book_update)
