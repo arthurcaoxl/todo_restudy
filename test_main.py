@@ -1,7 +1,16 @@
+import os
+from dotenv import load_dotenv
 from fastapi.testclient import TestClient
 from main import app
 
-client = TestClient(app)
+# 加载 .env 中的 API_KEY（CI 中已由 workflow 创建）
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    raise ValueError("API_KEY not set in environment. Please check .env file or GitHub Secret.")
+
+# 创建带认证头的测试客户端
+client = TestClient(app, headers={"X-API-Key": API_KEY})
 
 def test_create_book():
     resp = client.post("/books", json={"title": "测试书", "author": "李四"})
@@ -9,7 +18,6 @@ def test_create_book():
     data = resp.json()
     assert data["title"] == "测试书"
     assert data["author"] == "李四"
-    # 不要返回任何东西，或者添加一个断言
 
 def test_get_books():
     resp = client.get("/books")
