@@ -35,8 +35,13 @@ jobs:
           pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
           pip install pytest-cov
 
-      - name: Run tests with coverage
+      - name: Debug secret (check if exists)
+        run: |
+          if [ -n "$API_KEY" ]; then echo "API_KEY is set"; else echo "API_KEY is NOT set"; fi
         env:
           API_KEY: ${{ secrets.API_KEY }}
+
+      - name: Run tests with coverage
         run: |
+          export API_KEY="${{ secrets.API_KEY }}"
           pytest test_main.py -v --cov=main --cov=crud --cov=schemas --cov-report=term-missing
