@@ -38,4 +38,10 @@ jobs:
       - name: Run tests with coverage
         run: |
           echo "API_KEY=${{ secrets.API_KEY }}" > .env
+          echo "=== .env file content ==="
+          cat .env
+          echo "========================="
+          echo "Current directory: $(pwd)"
+          echo "Python path: $(which python)"
+          python -c "from dotenv import load_dotenv; import os; load_dotenv(dotenv_path='.env', override=True); print('API_KEY from getenv:', repr(os.getenv('API_KEY')))"
           pytest test_main.py -v --cov=main --cov=crud --cov=schemas --cov-report=term-missing
