@@ -40,18 +40,12 @@ jobs:
         env:
           API_KEY: ${{ secrets.API_KEY }}
         run: |
-          # 创建 .env 文件
           echo "API_KEY=${{ secrets.API_KEY }}" > .env
-          
-          # 调试信息
-          echo "=== .env file content ==="
+          echo "=== .env content ==="
           cat .env
           echo "=== Shell API_KEY ==="
           echo "API_KEY = ${API_KEY:-NOT_SET}"
-          echo "=== Python os.getenv ==="
+          echo "=== Python getenv ==="
           python -c "import os; print('os.getenv:', repr(os.getenv('API_KEY')))"
-          echo "=== Python load_dotenv then getenv ==="
-          python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('load_dotenv + getenv:', repr(os.getenv('API_KEY')))"
-          
-          # 运行测试
+          python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('load_dotenv then getenv:', repr(os.getenv('API_KEY')))"
           pytest test_main.py -v --cov=main --cov=crud --cov=schemas --cov-report=term-missing
